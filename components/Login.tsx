@@ -10,8 +10,14 @@ type RegistrationScreenNavigationProp = StackNavigationProp<
   "Registration"
 >;
 
+type UserDashboardScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "UserDashboard"
+>;
+
 export default function Login() {
     const navigation = useNavigation<RegistrationScreenNavigationProp>();
+    const navigationUser = useNavigation<UserDashboardScreenNavigationProp>();
   const [form, setForm] = useState({ name: "", password: "" });
 
   return (
@@ -22,7 +28,7 @@ export default function Login() {
       {/* Input Fields */}
       <TextInput
         style={styles.input}
-        placeholder="Name"
+        placeholder="Registration Number"
         value={form.name}
         onChangeText={(text) => setForm({ ...form, name: text })}
       />
@@ -35,7 +41,7 @@ export default function Login() {
       />
 
       {/* Login Button */}
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={() => navigationUser.navigate("UserDashboard")}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
