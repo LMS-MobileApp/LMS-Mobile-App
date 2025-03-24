@@ -29,7 +29,7 @@ export default function Dashboard() {
             <FontAwesome name="times" size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.sidebarTitle}>Menu</Text>
-          <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText}>Home</Text></TouchableOpacity>
+          {/* <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText}>Home</Text></TouchableOpacity> */}
           <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText} onPress={() =>AssignmentView.navigate("AssignmentView")}>Assignments</Text></TouchableOpacity>
           <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText}>Profile</Text></TouchableOpacity>
           <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText}>Settings</Text></TouchableOpacity>

@@ -5,6 +5,7 @@ import Registration from "@/components/Registration";
 import Login from "@/components/Login";
 import AssignmentView from "@/components/tab/User/AssignmentView";
 import Dashboard from "@/components/tab/User/Dashboard";
+import Assignments from "@/components/tab/User/Assignments";
 
 const Stack = createStackNavigator();
 
@@ -35,6 +36,11 @@ export default function HomeScreen() {
         <Stack.Screen
           name="UserDashboard"
           component={Dashboard}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Assignments"
+          component={Assignments}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
