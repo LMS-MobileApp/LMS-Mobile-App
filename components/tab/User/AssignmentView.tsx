@@ -27,29 +27,29 @@ export default function AssignmentView() {
   const [progressMessage, setProgressMessage] = useState(
     "No completed assignment yet"
   );
-  const AssignmentView = useNavigation<AssignmentScreenNavigationProp>();
+  const navigation = useNavigation<AssignmentScreenNavigationProp>();
 
   // Due Assignments (Not Completed)
   const dueAssignments = [
-    { id: "1", title: "Assignment 01" },
-    { id: "2", title: "Assignment 02" },
-    { id: "3", title: "Assignment 03" },
-    { id: "4", title: "Assignment 04" },
-    { id: "5", title: "Assignment 05" },
+    { id: "1", title: "Assignment 1" },
+    { id: "2", title: "Assignment 2" },
+    { id: "3", title: "Assignment 3" },
+    { id: "4", title: "Assignment 4" },
+    { id: "5", title: "Assignment 5" },
   ];
 
   // Completed Assignments
   const completedAssignments = [
-    { id: "6", title: "Assignment 01", correctAnswers: 6, totalQuestions: 10 },
-    { id: "7", title: "Assignment 02", correctAnswers: 8, totalQuestions: 10 },
-    { id: "8", title: "Assignment 03", correctAnswers: 7, totalQuestions: 10 },
-    { id: "9", title: "Assignment 04", correctAnswers: 2, totalQuestions: 10 },
-    { id: "10", title: "Assignment 05", correctAnswers: 2, totalQuestions: 10 },
+    { id: "6", title: "Assignment 1", correctAnswers: 6, totalQuestions: 10 },
+    { id: "7", title: "Assignment 2", correctAnswers: 8, totalQuestions: 10 },
+    { id: "8", title: "Assignment 3", correctAnswers: 7, totalQuestions: 10 },
+    { id: "9", title: "Assignment 4", correctAnswers: 2, totalQuestions: 10 },
+    { id: "10", title: "Assignment 5", correctAnswers: 2, totalQuestions: 10 },
   ];
 
   const handleCompletedAssignmentClick = (assignment: any, isDue: boolean) => {
     if (isDue) {
-      AssignmentView.navigate("Assignments", { assignment }); // Navigate only for due assignments
+      navigation.navigate("Assignments", { assignmentId: assignment.id }); // Pass the assignment ID
     }
     if (assignment.correctAnswers !== undefined) {
       const percentage =
@@ -60,8 +60,7 @@ export default function AssignmentView() {
     }
   };
 
-  //@ts-ignore
-  const renderAssignmentItem = ({ item }: any, isDue:boolean) => (
+  const renderAssignmentItem = ({ item }: any, isDue: boolean) => (
     <TouchableOpacity
       style={styles.assignmentBox}
       onPress={() => handleCompletedAssignmentClick(item, isDue)}
@@ -99,10 +98,10 @@ export default function AssignmentView() {
       <Text style={styles.sectionTitle}>Due Assignments</Text>
       <FlatList
         data={dueAssignments}
-        renderItem={({ item }) => renderAssignmentItem({ item }, true)} // Only due assignments can navigate
+        renderItem={({ item }) => renderAssignmentItem({ item }, true)}
         keyExtractor={(item) => item.id}
         horizontal
-        pagingEnabled={dueAssignments.length > 3} // Enable paging only if more than 3
+        pagingEnabled={dueAssignments.length > 3}
         showsHorizontalScrollIndicator={false}
       />
 
@@ -110,10 +109,10 @@ export default function AssignmentView() {
       <Text style={styles.sectionTitle}>Completed Assignments</Text>
       <FlatList
         data={completedAssignments}
-        renderItem={({ item }) => renderAssignmentItem({ item }, false)} // No navigation for completed assignments
+        renderItem={({ item }) => renderAssignmentItem({ item }, false)}
         keyExtractor={(item) => item.id}
         horizontal
-        pagingEnabled={completedAssignments.length > 3} // Enable paging only if more than 3
+        pagingEnabled={completedAssignments.length > 3}
         showsHorizontalScrollIndicator={false}
       />
 
@@ -158,7 +157,6 @@ const styles = StyleSheet.create({
     padding: 20,
     marginTop: 20,
   },
-
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -169,30 +167,25 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
   },
-
   profileImage: {
     width: 50,
     height: 50,
     borderRadius: 25,
   },
-
   pickerContainer: {
     backgroundColor: "#FFF",
     borderRadius: 10,
     elevation: 3,
     marginBottom: 15,
   },
-
   picker: {
     height: 60,
   },
-
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
     marginVertical: 20,
   },
-
   assignmentBox: {
     width: 150,
     height: 100,
@@ -206,37 +199,31 @@ const styles = StyleSheet.create({
     borderBlockColor: "#6CBEB6",
     borderWidth: 1,
   },
-
   progressTitle: {
     fontSize: 18,
     fontWeight: "bold",
     marginVertical: 20,
   },
-
   progressContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginVertical: 20,
   },
-
   progressText: {
     fontSize: 16,
     textAlign: "center",
   },
-
   noProgressText: {
     fontSize: 16,
     color: "#888",
     textAlign: "center",
     marginVertical: 10,
   },
-
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
     marginTop: 10,
   },
-
   button: {
     backgroundColor: "#D3D3D3",
     paddingVertical: 12,
@@ -245,7 +232,6 @@ const styles = StyleSheet.create({
     borderColor: "#6CBEB6",
     borderWidth: 1,
   },
-
   buttonText: {
     fontSize: 14,
     fontWeight: "semibold",
