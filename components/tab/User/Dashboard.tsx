@@ -7,16 +7,25 @@ import { StackNavigationProp } from '@react-navigation/stack';
 //@ts-ignore
 import { RootStackParamList } from "../Common/StackNavigator";
 import { useNavigation } from '@react-navigation/native';
+import UserProfileScreen from './UserProfileScreen';
 
 const screenWidth = Dimensions.get('window').width;
 
+// AssignmentViewScreen
 type AssignmentViewScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "AssignmentView"
 >;
 
+//UserProfileScreen
+type UserProfileScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "UserProfile"
+>;
+
 export default function Dashboard() {
  const AssignmentView = useNavigation<AssignmentViewScreenNavigationProp>();
+ const UserProfileView = useNavigation<UserProfileScreenNavigationProp>();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -31,7 +40,7 @@ export default function Dashboard() {
           <Text style={styles.sidebarTitle}>Menu</Text>
           {/* <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText}>Home</Text></TouchableOpacity> */}
           <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText} onPress={() =>AssignmentView.navigate("AssignmentView")}>Assignments</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText}>Profile</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText} onPress={() =>UserProfileView.navigate("UserProfile")}>Profile</Text></TouchableOpacity>
           <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText}>Settings</Text></TouchableOpacity>
         </View>
       )}
