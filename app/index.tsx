@@ -7,6 +7,7 @@ import AssignmentView from "@/components/tab/User/AssignmentView";
 import Dashboard from "@/components/tab/User/Dashboard";
 import Assignments from "@/components/tab/User/Assignments";
 import UserProfileScreen from "@/components/tab/User/UserProfileScreen";
+import SettingScreen from "@/components/SettingScreen";
 
 const Stack = createStackNavigator();
 
@@ -47,6 +48,11 @@ export default function HomeScreen() {
         <Stack.Screen
           name="UserProfile"
           component={UserProfileScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Setting"
+          component={SettingScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

@@ -23,9 +23,16 @@ type UserProfileScreenNavigationProp = StackNavigationProp<
   "UserProfile"
 >;
 
+//SettingScreen
+type SettingScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "Setting"
+>;
+
 export default function Dashboard() {
  const AssignmentView = useNavigation<AssignmentViewScreenNavigationProp>();
  const UserProfileView = useNavigation<UserProfileScreenNavigationProp>();
+  const SettingView = useNavigation<SettingScreenNavigationProp>();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -41,7 +48,7 @@ export default function Dashboard() {
           {/* <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText}>Home</Text></TouchableOpacity> */}
           <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText} onPress={() =>AssignmentView.navigate("AssignmentView")}>Assignments</Text></TouchableOpacity>
           <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText} onPress={() =>UserProfileView.navigate("UserProfile")}>Profile</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText}>Settings</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.menuButton}><Text style={styles.menuText} onPress={() =>SettingView.navigate("Setting")}>Settings</Text></TouchableOpacity>
         </View>
       )}
 
