@@ -36,10 +36,17 @@ type SettingScreenNavigationProp = StackNavigationProp<
   "Setting"
 >;
 
+//CalenderView
+type CalenderViewNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "CalenderView"
+>;
+
 export default function Dashboard() {
   const AssignmentView = useNavigation<AssignmentViewScreenNavigationProp>();
   const UserProfileView = useNavigation<UserProfileScreenNavigationProp>();
   const SettingView = useNavigation<SettingScreenNavigationProp>();
+  const CalenderView = useNavigation<CalenderViewNavigationProp>();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -77,6 +84,14 @@ export default function Dashboard() {
               onPress={() => SettingView.navigate("Setting")}
             >
               Settings
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuButton}>
+            <Text
+              style={styles.menuText}
+              onPress={() => CalenderView.navigate("CalenderView")}
+            >
+              Calendar
             </Text>
           </TouchableOpacity>
         </View>
