@@ -14,6 +14,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 //@ts-ignore
 import { RootStackParamList } from "../Common/StackNavigator";
 import { useNavigation } from "@react-navigation/native";
+import { FontAwesome } from '@expo/vector-icons';
 
 type AssignmentScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -141,9 +142,12 @@ export default function AssignmentView() {
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button}>
           <Text style={styles.buttonText}>Attached Notes</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Start Time Resume</Text>
+          <FontAwesome
+            name="paperclip"
+            size={18}
+            color="#6CBEB6"
+            style={styles.icon}
+          />
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -221,19 +225,27 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
     marginTop: 10,
   },
   button: {
-    backgroundColor: "#D3D3D3",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    backgroundColor: "#FFF",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 10,
     borderColor: "#6CBEB6",
     borderWidth: 1,
   },
+  icon: {
+    marginLeft: 8,
+    color: "black",
+  },
   buttonText: {
     fontSize: 14,
     fontWeight: "semibold",
+    textAlign: "center",
   },
 });
