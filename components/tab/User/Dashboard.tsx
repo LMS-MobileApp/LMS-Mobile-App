@@ -42,6 +42,12 @@ type CalenderViewNavigationProp = StackNavigationProp<
   "CalenderView"
 >;
 
+//CollaborationHub
+type CollaborationHubNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "CollaborationHub"
+>;
+
 export default function Dashboard() {
   const AssignmentView = useNavigation<AssignmentViewScreenNavigationProp>();
   const UserProfileView = useNavigation<UserProfileScreenNavigationProp>();
@@ -78,20 +84,29 @@ export default function Dashboard() {
               Profile
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.menuButton}>
-            <Text
-              style={styles.menuText}
-              onPress={() => SettingView.navigate("Setting")}
-            >
-              Settings
-            </Text>
-          </TouchableOpacity>
+          
           <TouchableOpacity style={styles.menuButton}>
             <Text
               style={styles.menuText}
               onPress={() => CalenderView.navigate("CalenderView")}
             >
               Calendar
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuButton}>
+            <Text
+              style={styles.menuText}
+              onPress={() => AssignmentView.navigate("CollaborationHub")}
+            >
+              Collaboration Hub
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuButton}>
+            <Text
+              style={styles.menuText}
+              onPress={() => SettingView.navigate("Setting")}
+            >
+              Settings
             </Text>
           </TouchableOpacity>
         </View>
