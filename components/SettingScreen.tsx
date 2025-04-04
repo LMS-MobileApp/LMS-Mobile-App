@@ -1,8 +1,21 @@
 import React, { useState } from 'react';
 import { View, Text, Switch, TouchableOpacity, StyleSheet, Modal, Pressable } from 'react-native';
+import { StackNavigationProp } from "@react-navigation/stack";
+//@ts-ignore
+import { RootStackParamList } from "../Common/StackNavigator";
+import { useNavigation } from '@react-navigation/native';
+
+
+//Logout
+type LogoutNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "Login"
+>;
 
 export default function SettingScreen() {
-  const [isEnabled, setIsEnabled] = useState(false);
+  const navigationLogin = useNavigation<LogoutNavigationProp>();
+
+  // const [isEnabled, setIsEnabled] = useState(false);
   const [aboutUsVisible, setAboutUsVisible] = useState(false);
   const [privacyVisible, setPrivacyVisible] = useState(false);
 
@@ -14,13 +27,13 @@ export default function SettingScreen() {
       {/* Settings Block */}
       <View style={styles.settingsBlock}>
         {/* Notification Toggle */}
-        <View style={styles.optionRow}>
+        {/* <View style={styles.optionRow}>
           <Text style={styles.optionText}>Notifications</Text>
           <Switch value={isEnabled} onValueChange={() => setIsEnabled(!isEnabled)} />
-        </View>
+        </View> */}
 
         {/* Divider */}
-        <View style={styles.divider} />
+        {/* <View style={styles.divider} /> */}
 
         {/* About Us - Opens Modal */}
         <TouchableOpacity onPress={() => setAboutUsVisible(true)}>
@@ -32,6 +45,11 @@ export default function SettingScreen() {
         {/* Privacy Policies - Opens Modal */}
         <TouchableOpacity onPress={() => setPrivacyVisible(true)}>
           <Text style={styles.optionText}>Privacy Policies</Text>
+        </TouchableOpacity>
+
+        <View style={styles.divider} />
+        <TouchableOpacity onPress={() => navigationLogin.navigate("Login")}>
+          <Text style={styles.optionText}>Log Out</Text>
         </TouchableOpacity>
       </View>
 

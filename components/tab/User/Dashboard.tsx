@@ -53,6 +53,7 @@ export default function Dashboard() {
   const UserProfileView = useNavigation<UserProfileScreenNavigationProp>();
   const SettingView = useNavigation<SettingScreenNavigationProp>();
   const CalenderView = useNavigation<CalenderViewNavigationProp>();
+  const CollaborationHubView = useNavigation<CollaborationHubNavigationProp>();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -96,7 +97,7 @@ export default function Dashboard() {
           <TouchableOpacity style={styles.menuButton}>
             <Text
               style={styles.menuText}
-              onPress={() => AssignmentView.navigate("CollaborationHub")}
+              onPress={() => CollaborationHubView.navigate("CollaborationHub")}
             >
               Collaboration Hub
             </Text>

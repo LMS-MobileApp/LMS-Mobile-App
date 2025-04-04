@@ -10,6 +10,9 @@ import UserProfileScreen from "@/components/tab/User/UserProfileScreen";
 import SettingScreen from "@/components/SettingScreen";
 import CalenderView from "@/components/tab/User/CalenderView";
 import CollaborationHub from "@/components/tab/User/CollaborationHub";
+import AdminDashboard from "@/components/tab/Lecture/AdminDashboard";
+import AddAssignment from "@/components/tab/Lecture/AddAssignment";
+
 
 const Stack = createStackNavigator();
 
@@ -65,6 +68,16 @@ export default function HomeScreen() {
         <Stack.Screen
           name="CollaborationHub"
           component={CollaborationHub}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AdminDashboard"
+          component={AdminDashboard}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AddAssignment"
+          component={AddAssignment}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
