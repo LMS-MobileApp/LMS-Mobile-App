@@ -47,7 +47,7 @@ export default function Login() {
       />
 
       {/* Login Button */}
-      <TouchableOpacity style={styles.button} onPress={() => navigationAdmin.navigate("AdminDashboard")}>
+      <TouchableOpacity style={styles.button} onPress={() => navigationAdmin.navigate("UserDashboard")}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 

@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import * as DocumentPicker from "expo-document-picker";
-import DateTimePicker from "@react-native-community/datetimepicker";
+// import DateTimePicker from '@react-native-community/datetimepicker';
 import { FontAwesome } from "@expo/vector-icons";
 
 const AddAssignment = () => {
@@ -82,14 +82,14 @@ const AddAssignment = () => {
           style={styles.icon}
         />
       </TouchableOpacity>
-      {showDatePicker && (
+      {/* {showDatePicker && (
         <DateTimePicker
           value={formData.dueDate}
           mode="date"
           display="default"
           onChange={handleDateChange}
         />
-      )}
+      )} */}
 
       <TouchableOpacity
         style={styles.input}
@@ -103,14 +103,14 @@ const AddAssignment = () => {
           style={styles.icon}
         />
       </TouchableOpacity>
-      {showTimePicker && (
+      {/* {showTimePicker && (
         <DateTimePicker
           value={formData.dueTime}
           mode="time"
           display="default"
           onChange={handleTimeChange}
         />
-      )}
+      )} */}
 
       <TextInput
         style={styles.input}

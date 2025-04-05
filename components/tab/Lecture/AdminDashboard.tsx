@@ -19,6 +19,12 @@ type AddAssignmentNavigationProp = StackNavigationProp<
   "AddAssignment"
 >;
 
+//AllAssignmentsScreen
+type AllAssignmentsNavigationProp = StackNavigationProp<  
+    RootStackParamList,
+    "AllAssignments"
+  >;
+
 //SettingScreen
 type SettingScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -28,6 +34,7 @@ type SettingScreenNavigationProp = StackNavigationProp<
 export default function AdminDashboard() {
     const navigationAddAssignment = useNavigation<AddAssignmentNavigationProp>();
     const SettingView = useNavigation<SettingScreenNavigationProp>();
+  const navigationAllAssignments = useNavigation<AllAssignmentsNavigationProp>();
 
   const [course, setCourse] = useState(null);
   const [subject, setSubject] = useState(null);
@@ -87,6 +94,9 @@ export default function AdminDashboard() {
           <Text style={styles.sidebarTitle}>Menu</Text>
           <TouchableOpacity style={styles.menuItem}>
             <Text style={styles.menuText} onPress={() => navigationAddAssignment.navigate("AddAssignment")}>Assignments</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem}>
+            <Text style={styles.menuText} onPress={() => navigationAllAssignments.navigate("AllAssignments")}>All Assignments</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuItem}>
             <Text style={styles.menuText} onPress={() => SettingView.navigate("Setting")}>Settings</Text>

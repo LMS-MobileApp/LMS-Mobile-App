@@ -118,7 +118,7 @@ export default function AssignmentView() {
       />
 
       {/* Completed Assignment Progress */}
-      <Text style={styles.progressTitle}>Completed Assignment Progress</Text>
+      {/* <Text style={styles.progressTitle}>Completed Assignment Progress</Text>
       <View style={styles.progressContainer}>
         {showProgress ? (
           <>
@@ -136,10 +136,10 @@ export default function AssignmentView() {
         ) : (
           <Text style={styles.noProgressText}>{progressMessage}</Text>
         )}
-      </View>
+      </View> */}
 
       {/* Buttons */}
-      <View style={styles.buttonContainer}>
+      {/* <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button}>
           <Text style={styles.buttonText}>Attached Notes</Text>
           <FontAwesome
@@ -149,7 +149,7 @@ export default function AssignmentView() {
             style={styles.icon}
           />
         </TouchableOpacity>
-      </View>
+      </View> */}
     </ScrollView>
   );
 }
