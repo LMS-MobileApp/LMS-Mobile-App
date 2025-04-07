@@ -1,16 +1,11 @@
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
-//@ts-ignore
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { RootStackParamList } from "../Common/StackNavigator";
 import { Dropdown } from "react-native-element-dropdown";
+import Toast from "react-native-toast-message";
+import { registerUser } from "../utils/auth"; // Import from utils/auth.js
 
 type LoginScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -19,22 +14,22 @@ type LoginScreenNavigationProp = StackNavigationProp<
 
 export default function Registration() {
   const navigation = useNavigation<LoginScreenNavigationProp>();
-
   const [form, setForm] = useState({
     name: "",
     email: "",
-    registrationNumber: "",
+    regNo: "",
     course: null,
     batch: null,
     password: "",
     confirmPassword: "",
   });
+  const [loading, setLoading] = useState(false);
 
   const courseOptions = [
-    { label: "Computer Science", value: "cs" },
-    { label: "Electrical Engineering", value: "ee" },
-    { label: "Mechanical Engineering", value: "me" },
-    { label: "Civil Engineering", value: "ce" },
+    { label: "Computer Science", value: "Computer Science" },
+    { label: "Electrical Engineering", value: "Electrical Engineering" },
+    { label: "Mechanical Engineering", value: "Mechanical Engineering" },
+    { label: "Civil Engineering", value: "Civil Engineering" },
   ];
 
   const batchOptions = [
@@ -44,17 +39,54 @@ export default function Registration() {
     { label: "2026", value: "2026" },
   ];
 
+  const handleRegister = async () => {
+    if (!form.name || !form.email || !form.regNo || !form.course || !form.batch || !form.password) {
+      Alert.alert("Error", "All fields are required");
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+    const payload = {
+      name: form.name,
+      email: form.email,
+      regNo: form.regNo,
+      course: form.course,
+      batch: form.batch,
+      password: form.password,
+      role: "student",
+    };
+    console.log("Registering with payload:", payload);
+
+    try {
+      const { token, role } = await registerUser(payload); // Use the utility function
+      console.log("Registration Response:", { token, role });
+
+      Toast.show({
+        type: "success",
+        text1: "Registration Successful",
+        text2: `Account created as ${role}. Please log in.`,
+        position: "top",
+      });
+
+      navigation.navigate("Login");
+    } catch (error) {
+      const errorMessage = error.message || "Registration failed";
+      Alert.alert("Registration Failed", errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* Title */}
       <Text style={styles.title}>Welcome Stay Organized, Stay Ahead</Text>
-
-      {/* Subtitle */}
       <Text style={styles.subtitle}>
-        Let's Empower Your Learning, {"\n"} Master Your Deadlines
+        {"Let's Empower Your Learning,\nMaster Your Deadlines"}
       </Text>
-
-      {/* Input Fields */}
       <TextInput
         style={styles.input}
         placeholder="Name"
@@ -66,17 +98,15 @@ export default function Registration() {
         placeholder="Email"
         value={form.email}
         onChangeText={(text) => setForm({ ...form, email: text })}
+        keyboardType="email-address"
+        autoCapitalize="none"
       />
       <TextInput
         style={styles.input}
         placeholder="Registration Number"
-        value={form.registrationNumber}
-        onChangeText={(text) =>
-          setForm({ ...form, registrationNumber: text })
-        }
+        value={form.regNo}
+        onChangeText={(text) => setForm({ ...form, regNo: text })}
       />
-
-      {/* Searchable Course Dropdown */}
       <Dropdown
         style={styles.dropdown}
         placeholderStyle={styles.placeholderStyle}
@@ -90,8 +120,6 @@ export default function Registration() {
         value={form.course}
         onChange={(item) => setForm({ ...form, course: item.value })}
       />
-
-      {/* Searchable Batch Dropdown */}
       <Dropdown
         style={styles.dropdown}
         placeholderStyle={styles.placeholderStyle}
@@ -105,7 +133,6 @@ export default function Registration() {
         value={form.batch}
         onChange={(item) => setForm({ ...form, batch: item.value })}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Enter Password"
@@ -120,18 +147,18 @@ export default function Registration() {
         value={form.confirmPassword}
         onChangeText={(text) => setForm({ ...form, confirmPassword: text })}
       />
-
-      {/* Register Button */}
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Register</Text>
-      </TouchableOpacity>
-
-      {/* Sign-in Link */}
-      <Text
-        style={styles.signInText}
-        onPress={() => navigation.navigate("Login")}
+      <TouchableOpacity
+        style={[styles.button, loading && styles.buttonDisabled]}
+        onPress={handleRegister}
+        disabled={loading}
       >
-        Already have an Account? <Text style={styles.logInLink}>Log In</Text>
+        <Text style={styles.buttonText}>{loading ? "Registering..." : "Register"}</Text>
+      </TouchableOpacity>
+      <Text style={styles.signInText}>
+        {"Already have an Account? "}
+        <Text style={styles.logInLink} onPress={() => navigation.navigate("Login")}>
+          Log In
+        </Text>
       </Text>
     </View>
   );
@@ -174,7 +201,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 15,
     marginBottom: 10,
-    // elevation: 2,
   },
   placeholderStyle: {
     color: "#999",
@@ -191,6 +217,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 10,
   },
+  buttonDisabled: {
+    backgroundColor: "#A9A9A9",
+  },
   buttonText: {
     color: "#FFF",
     fontSize: 16,
@@ -206,4 +235,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-

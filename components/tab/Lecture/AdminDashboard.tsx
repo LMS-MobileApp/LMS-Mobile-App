@@ -1,110 +1,90 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-} from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, FlatList, StyleSheet, TouchableOpacity } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { FontAwesome } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-//@ts-ignore
 import { RootStackParamList } from "../Common/StackNavigator";
-import { useNavigation } from '@react-navigation/native';
+import { getSubmittedAssignments } from "../../../utils/assignmentApi";
 
-//AddAssignmentScreen
-type AddAssignmentNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "AddAssignment"
->;
-
-//AllAssignmentsScreen
-type AllAssignmentsNavigationProp = StackNavigationProp<  
-    RootStackParamList,
-    "AllAssignments"
-  >;
-
-//SettingScreen
-type SettingScreenNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "Setting"
->;
+type AddAssignmentNavigationProp = StackNavigationProp<RootStackParamList, "AddAssignment">;
+type AllAssignmentsNavigationProp = StackNavigationProp<RootStackParamList, "AllAssignments">;
+type EditAssignmentNavigationProp = StackNavigationProp<RootStackParamList, "EditAssignment">; // Added
+type SettingScreenNavigationProp = StackNavigationProp<RootStackParamList, "Setting">;
 
 export default function AdminDashboard() {
-    const navigationAddAssignment = useNavigation<AddAssignmentNavigationProp>();
-    const SettingView = useNavigation<SettingScreenNavigationProp>();
+  const navigationAddAssignment = useNavigation<AddAssignmentNavigationProp>();
   const navigationAllAssignments = useNavigation<AllAssignmentsNavigationProp>();
+  const navigationEditAssignment = useNavigation<EditAssignmentNavigationProp>(); // Added
+  const navigationSetting = useNavigation<SettingScreenNavigationProp>();
 
   const [course, setCourse] = useState(null);
-  const [subject, setSubject] = useState(null);
-  const [students, setStudents] = useState<
-    { name: string; status: string; course: string; subject: string }[]
-  >([]);
+  const [batch, setBatch] = useState(null);
+  const [submissions, setSubmissions] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const courses = [
-    { label: "Computer Science", value: "cs" },
-    { label: "Business Management", value: "bm" },
+    { label: "Computer Science", value: "Computer Science" },
+    { label: "Business Management", value: "Business Management" },
   ];
 
-  const subjects = [
-    { label: "Math", value: "math" },
-    { label: "Programming", value: "programming" },
+  const batches = [
+    { label: "2023", value: "2023" },
+    { label: "2024", value: "2024" },
   ];
 
-  const allStudents = [
-    { name: "Harshana", status: "submitted", course: "cs", subject: "math" },
-    { name: "Dineth", status: "Not submitted", course: "cs", subject: "math" },
-    { name: "Sarah", status: "submitted", course: "bm", subject: "programming" },
-    { name: "John", status: "Not submitted", course: "bm", subject: "math" },
-  ];
+  useEffect(() => {
+    searchSubmissions();
+  }, [course, batch]);
 
-  const searchStudents = () => {
-    if (course && subject) {
-      const filtered = allStudents.filter(
-        (student) => student.course === course && student.subject === subject
-      );
-      setStudents(filtered);
-    } else {
-      setStudents([]);
+  const searchSubmissions = async () => {
+    try {
+      const filters = {};
+      if (course) filters.course = course;
+      if (batch) filters.batch = batch;
+      const data = await getSubmittedAssignments(filters);
+      setSubmissions(Array.isArray(data) ? data : data.data || []);
+    } catch (error) {
+      console.error(error.message);
+      setSubmissions([]);
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Hamburger */}
-      <TouchableOpacity
-        style={styles.hamburger}
-        onPress={() => setMenuOpen(true)}
-      >
+      <TouchableOpacity style={styles.hamburger} onPress={() => setMenuOpen(true)}>
         <FontAwesome name="bars" size={24} color="#000" />
       </TouchableOpacity>
 
-      {/* Sidebar */}
       {menuOpen && (
         <View style={styles.sidebar}>
-          <TouchableOpacity
-            style={styles.closeSidebar}
-            onPress={() => setMenuOpen(false)}
-          >
+          <TouchableOpacity style={styles.closeSidebar} onPress={() => setMenuOpen(false)}>
             <FontAwesome name="times" size={24} color="#fff" />
           </TouchableOpacity>
-
           <Text style={styles.sidebarTitle}>Menu</Text>
           <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuText} onPress={() => navigationAddAssignment.navigate("AddAssignment")}>Assignments</Text>
+            <Text style={styles.menuText} onPress={() => navigationAddAssignment.navigate("AddAssignment")}>
+              Add Assignment
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuText} onPress={() => navigationAllAssignments.navigate("AllAssignments")}>All Assignments</Text>
+            <Text style={styles.menuText} onPress={() => navigationAllAssignments.navigate("AllAssignments")}>
+              All Assignments
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuItem}>
-            <Text style={styles.menuText} onPress={() => SettingView.navigate("Setting")}>Settings</Text>
+            <Text style={styles.menuText} onPress={() => navigationEditAssignment.navigate("EditAssignment")}>
+              Edit Assignment
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem}>
+            <Text style={styles.menuText} onPress={() => navigationSetting.navigate("Setting")}>
+              Settings
+            </Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* Original UI */}
       <Text style={styles.greeting}>Hello, Klera Ogasthine</Text>
 
       <View style={styles.dropdownContainer}>
@@ -116,51 +96,38 @@ export default function AdminDashboard() {
           value={course}
           search
           searchPlaceholder="Search Course..."
-          onChange={(item) => {
-            setCourse(item.value);
-            searchStudents();
-          }}
+          onChange={(item) => setCourse(item.value)}
           style={styles.dropdown}
         />
         <Dropdown
-          data={subjects}
+          data={batches}
           labelField="label"
           valueField="value"
-          placeholder="Subject"
-          value={subject}
+          placeholder="Batch"
+          value={batch}
           search
-          searchPlaceholder="Search Subject..."
-          onChange={(item) => {
-            setSubject(item.value);
-            searchStudents();
-          }}
+          searchPlaceholder="Search Batch..."
+          onChange={(item) => setBatch(item.value)}
           style={styles.dropdown}
         />
       </View>
 
-      {students.length > 0 ? (
+      {submissions.length > 0 ? (
         <FlatList
-          data={students}
-          keyExtractor={(item) => item.name}
+          data={submissions}
+          keyExtractor={(item) => item._id}
           renderItem={({ item }) => (
             <View style={styles.studentItem}>
-              <Text style={styles.studentName}>{item.name}</Text>
-              <Text
-                style={[
-                  styles.status,
-                  item.status === "submitted"
-                    ? styles.submitted
-                    : styles.notSubmitted,
-                ]}
-              >
-                {item.status}
+              <Text style={styles.studentName}>{item.title}</Text>
+              <Text style={styles.status}>
+                {item.submissions.length} submission{item.submissions.length !== 1 ? "s" : ""}
               </Text>
             </View>
           )}
         />
       ) : (
         course &&
-        subject && <Text style={styles.noResults}>No students found.</Text>
+        batch && <Text style={styles.noResults}>No submissions found.</Text>
       )}
     </View>
   );
@@ -247,12 +214,7 @@ const styles = StyleSheet.create({
   status: {
     fontSize: 14,
     fontWeight: "bold",
-  },
-  submitted: {
     color: "green",
-  },
-  notSubmitted: {
-    color: "red",
   },
   noResults: {
     textAlign: "center",
