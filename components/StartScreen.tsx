@@ -4,13 +4,16 @@ import React from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 //@ts-ignore
 import { RootStackParamList } from "../Common/StackNavigator";
+import Login from './Login';
 
 
 type RegistrationScreenNavigationProp = StackNavigationProp<RootStackParamList, "Registration">;
+type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, "Login">;
 
 export default function StartScreen() {
 
     const navigation = useNavigation<RegistrationScreenNavigationProp>();
+    const navigationLogin = useNavigation<LoginScreenNavigationProp>();
 
   return (
     <View style={styles.container}>
@@ -26,7 +29,8 @@ export default function StartScreen() {
       </Text>
 
       {/* Get Started Button */}
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Registration")}>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Login")}>
+        {/* <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Registration")}> */}  
         <Text style={styles.buttonText}>Get Started</Text>
       </TouchableOpacity>
     </View>

@@ -7,10 +7,13 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from "react-native";
 //@ts-ignore
 import { RootStackParamList } from "../Common/StackNavigator";
 import { Dropdown } from "react-native-element-dropdown";
+import FontAwesome from "react-native-vector-icons/FontAwesome";
+import Auth from "@/util/auth";
 
 type LoginScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -19,6 +22,8 @@ type LoginScreenNavigationProp = StackNavigationProp<
 
 export default function Registration() {
   const navigation = useNavigation<LoginScreenNavigationProp>();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -43,6 +48,57 @@ export default function Registration() {
     { label: "2025", value: "2025" },
     { label: "2026", value: "2026" },
   ];
+
+  const handleRegister = async () => {
+    const {
+      name,
+      email,
+      registrationNumber,
+      course,
+      batch,
+      password,
+      confirmPassword,
+    } = form;
+
+    // Basic validation
+    if (
+      !name ||
+      !email ||
+      !registrationNumber ||
+      !course ||
+      !batch ||
+      !password ||
+      !confirmPassword
+    ) {
+      Alert.alert("Error", "Please fill out all fields.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
+      return;
+    }
+
+    const result = await Auth.register({
+      name,
+      email,
+      registrationNumber,
+      course,
+      batch,
+      password,
+    });
+
+    if (result.success) {
+      Alert.alert("Success", "Registration successful!", [
+        {
+          text: "OK",
+          onPress: () => navigation.navigate("Login"),
+        },
+      ]);
+    } else {
+      Alert.alert("Registration Failed", result.message || "Please try again.");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -71,9 +127,7 @@ export default function Registration() {
         style={styles.input}
         placeholder="Registration Number"
         value={form.registrationNumber}
-        onChangeText={(text) =>
-          setForm({ ...form, registrationNumber: text })
-        }
+        onChangeText={(text) => setForm({ ...form, registrationNumber: text })}
       />
 
       {/* Searchable Course Dropdown */}
@@ -106,23 +160,44 @@ export default function Registration() {
         onChange={(item) => setForm({ ...form, batch: item.value })}
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Password"
-        secureTextEntry
-        value={form.password}
-        onChangeText={(text) => setForm({ ...form, password: text })}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        secureTextEntry
-        value={form.confirmPassword}
-        onChangeText={(text) => setForm({ ...form, confirmPassword: text })}
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Enter Password"
+          secureTextEntry={!showPassword}
+          value={form.password}
+          onChangeText={(text) => setForm({ ...form, password: text })}
+        />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+          <FontAwesome
+            name={showPassword ? "eye" : "eye-slash"}
+            size={20}
+            color="#888"
+          />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Confirm Password"
+          secureTextEntry={!showConfirmPassword}
+          value={form.confirmPassword}
+          onChangeText={(text) => setForm({ ...form, confirmPassword: text })}
+        />
+        <TouchableOpacity
+          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+        >
+          <FontAwesome
+            name={showConfirmPassword ? "eye" : "eye-slash"}
+            size={20}
+            color="#888"
+          />
+        </TouchableOpacity>
+      </View>
 
       {/* Register Button */}
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
         <Text style={styles.buttonText}>Register</Text>
       </TouchableOpacity>
 
@@ -184,6 +259,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
   },
+  passwordContainer: {
+    width: "90%",
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF",
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    marginBottom: 10,
+    // elevation: 2,
+    height: 45,
+    justifyContent: "space-between",
+  },
+  passwordInput: {
+    flex: 1,
+    height: "100%",
+    color: "#000",
+  },
+
   button: {
     backgroundColor: "#6FC3B2",
     paddingVertical: 12,
@@ -206,4 +299,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
