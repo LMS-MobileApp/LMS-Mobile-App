@@ -20,7 +20,7 @@ import io from "socket.io-client";
 
 const screenWidth = Dimensions.get("window").width;
 
-const decodeJWT = (token) => {
+const decodeJWT = (token: string): any => {
   try {
     const base64Url = token.split(".")[1];
     const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
@@ -37,22 +37,21 @@ const decodeJWT = (token) => {
   }
 };
 
-export default function Dashboard() {
+const Dashboard: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState([]);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [messageInput, setMessageInput] = useState("");
   const [groupChatModal, setGroupChatModal] = useState(false);
-  const [createGroupModal, setCreateGroupModal] = useState(false);
-  const [groupChats, setGroupChats] = useState([]); // User’s joined chats
-  const [allGroupChats, setAllGroupChats] = useState([]); // All available chats
-  const [searchQuery, setSearchQuery] = useState(""); // Search input
-  const [selectedGroupChat, setSelectedGroupChat] = useState(null);
-  const [groupMessages, setGroupMessages] = useState([]);
+  const [groupChats, setGroupChats] = useState<any[]>([]);
+  const [allGroupChats, setAllGroupChats] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedGroupChat, setSelectedGroupChat] = useState<any>(null);
+  const [groupMessages, setGroupMessages] = useState<any[]>([]);
   const [groupMessageInput, setGroupMessageInput] = useState("");
-  const [newGroupName, setNewGroupName] = useState("");
-  const [newGroupAssignmentId, setNewGroupAssignmentId] = useState("");
-  const [userId, setUserId] = useState(null);
+  const [newGroupName, setNewGroupName] = useState(""); // New state for group name
+  const [newGroupAssignmentId, setNewGroupAssignmentId] = useState(""); // New state for assignment ID
+  const [userId, setUserId] = useState<string | null>(null);
   const socket = io("http://localhost:5001");
 
   useEffect(() => {
@@ -63,18 +62,14 @@ export default function Dashboard() {
           const decoded = decodeJWT(token);
           console.log("Decoded token:", decoded);
           setUserId(decoded.id);
-        } else {
-          console.log("No token found");
         }
 
         const tokenForApi = await AsyncStorage.getItem("token");
-        // Fetch user’s joined chats
         const userChatsResponse = await axios.get("http://localhost:5001/api/group-chats", {
           headers: { Authorization: `Bearer ${tokenForApi}` },
         });
         setGroupChats(userChatsResponse.data);
 
-        // Fetch all available chats
         const allChatsResponse = await axios.get("http://localhost:5001/api/group-chats/all", {
           headers: { Authorization: `Bearer ${tokenForApi}` },
         });
@@ -117,28 +112,31 @@ export default function Dashboard() {
 
   const handleCreateGroupChat = async () => {
     if (!newGroupName || !newGroupAssignmentId) {
-      Alert.alert("Error", "Please provide a group name and assignment ID");
+      Alert.alert("Error", "Please provide both group name and assignment ID");
       return;
     }
     try {
       const token = await AsyncStorage.getItem("token");
+      const payload = { name: newGroupName, assignmentId: newGroupAssignmentId };
+      console.log("Creating group with:", payload);
       const response = await axios.post(
         "http://localhost:5001/api/group-chats",
-        { assignmentId: newGroupAssignmentId, name: newGroupName },
+        payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      console.log("Create response:", response.data);
       setGroupChats((prev) => [...prev, response.data]);
       setAllGroupChats((prev) => [...prev, response.data]);
-      setCreateGroupModal(false);
       setNewGroupName("");
       setNewGroupAssignmentId("");
       Alert.alert("Success", "Group chat created!");
     } catch (error) {
+      console.error("Create group error:", error.response?.data || error);
       Alert.alert("Error", error.response?.data?.message || "Failed to create group chat");
     }
   };
 
-  const handleJoinGroupChat = async (groupChatId) => {
+  const handleJoinGroupChat = async (groupChatId: string) => {
     try {
       const token = await AsyncStorage.getItem("token");
       const response = await axios.post(
@@ -157,7 +155,7 @@ export default function Dashboard() {
     }
   };
 
-  const openGroupChat = async (groupChat) => {
+  const openGroupChat = async (groupChat: any) => {
     setSelectedGroupChat(groupChat);
     try {
       const token = await AsyncStorage.getItem("token");
@@ -201,7 +199,7 @@ export default function Dashboard() {
       setAllGroupChats((prev) =>
         prev.map((gc) =>
           gc._id === selectedGroupChat._id
-            ? { ...gc, members: gc.members.filter((m) => m !== userId) }
+            ? { ...gc, members: gc.members.filter((m: string) => m !== userId) }
             : gc
         )
       );
@@ -264,7 +262,7 @@ export default function Dashboard() {
             </View>
             <FlatList
               data={chatMessages}
-              keyExtractor={(item, index) => index.toString()}
+              keyExtractor={(_, index) => index.toString()}
               renderItem={({ item }) => (
                 <View
                   style={[
@@ -292,34 +290,6 @@ export default function Dashboard() {
                 <FontAwesome5 name="paper-plane" size={20} color="#fff" />
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal visible={createGroupModal} animationType="slide" transparent={true}>
-        <View style={styles.modalContainer}>
-          <View style={styles.chatContainer}>
-            <View style={styles.chatHeader}>
-              <Text style={styles.chatTitle}>Create Group Chat</Text>
-              <TouchableOpacity onPress={() => setCreateGroupModal(false)}>
-                <FontAwesome5 name="times" size={24} color="#fff" />
-              </TouchableOpacity>
-            </View>
-            <TextInput
-              style={styles.input}
-              placeholder="Group Name (e.g., HDSE Group)"
-              value={newGroupName}
-              onChangeText={setNewGroupName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Assignment ID (e.g., 67f02df8020c2886cd44c047)"
-              value={newGroupAssignmentId}
-              onChangeText={setNewGroupAssignmentId}
-            />
-            <TouchableOpacity style={styles.createButton} onPress={handleCreateGroupChat}>
-              <Text style={styles.buttonText}>Create</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -385,11 +355,21 @@ export default function Dashboard() {
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                 />
-                <TouchableOpacity
-                  style={styles.createButton}
-                  onPress={() => setCreateGroupModal(true)}
-                >
-                  <Text style={styles.buttonText}>Create New Group</Text>
+                {/* New inputs for creating group */}
+                <TextInput
+                  style={styles.input}
+                  placeholder="Group Name (e.g., HDSE Group)"
+                  value={newGroupName}
+                  onChangeText={setNewGroupName}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Assignment ID (e.g., 67f02df8020c2886cd44c047)"
+                  value={newGroupAssignmentId}
+                  onChangeText={setNewGroupAssignmentId}
+                />
+                <TouchableOpacity style={styles.createButton} onPress={handleCreateGroupChat}>
+                  <Text style={styles.buttonText}>Create Group</Text>
                 </TouchableOpacity>
                 <FlatList
                   data={filteredGroupChats}
@@ -449,9 +429,9 @@ export default function Dashboard() {
             data={{
               labels: ["Technology", "Car Brands", "Airlines"],
               datasets: [
-                { data: [85, 90, 75], colors: [(opacity) => `rgba(34, 128, 176, ${opacity})`] },
-                { data: [65, 78, 51], colors: [(opacity) => `rgba(255, 99, 132, ${opacity})`] },
-                { data: [25, 50, 20], colors: [(opacity) => `rgba(54, 162, 235, ${opacity})`] },
+                { data: [85, 90, 75], colors: [(opacity = 1) => `rgba(34, 128, 176, ${opacity})`] },
+                { data: [65, 78, 51], colors: [(opacity = 1) => `rgba(255, 99, 132, ${opacity})`] },
+                { data: [25, 50, 20], colors: [(opacity = 1) => `rgba(54, 162, 235, ${opacity})`] },
               ],
             }}
             width={screenWidth * 0.9}
@@ -472,7 +452,7 @@ export default function Dashboard() {
       </ScrollView>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -531,14 +511,13 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    justifyContent: "flex-end",
+    justifyContent: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   chatContainer: {
     height: "70%",
     backgroundColor: "#fff",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderRadius: 20,
     padding: 10,
   },
   chatHeader: {
@@ -707,7 +686,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f0f0",
     padding: 10,
     borderRadius: 5,
-    marginVertical: 10,
+    marginVertical: 5,
+    fontSize: 16,
   },
   searchInput: {
     backgroundColor: "#f0f0f0",
@@ -717,3 +697,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+
+export default Dashboard;
