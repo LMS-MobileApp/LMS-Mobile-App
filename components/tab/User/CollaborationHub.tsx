@@ -1,37 +1,60 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  Text,
   View,
-  TouchableOpacity,
+  Text,
   StyleSheet,
-  Modal,
   FlatList,
-  Image,
-  Dimensions,
+  TouchableOpacity,
+  TextInput,
+  Alert,
 } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
 
-const membersData = [
-  { id: "1", email: "email01.gmail.com", image: "https://media.istockphoto.com/id/2015429231/vector/vector-flat-illustration-in-black-color-avatar-user-profile-person-icon-profile-picture.jpg?s=612x612&w=0&k=20&c=Wu70OARg2npxWy5E22_ZLneabuTafvV_6avgYPhWOoU=" },
-  { id: "2", email: "email02.gmail.com", image: "https://media.istockphoto.com/id/1437816897/photo/business-woman-manager-or-human-resources-portrait-for-career-success-company-we-are-hiring.jpg?s=612x612&w=0&k=20&c=tyLvtzutRh22j9GqSGI33Z4HpIwv9vL_MZw_xOE19NQ=" },
-  { id: "3", email: "email03.gmail.com", image: "https://images.ctfassets.net/h6goo9gw1hh6/2sNZtFAWOdP1lmQ33VwRN3/24e953b920a9cd0ff2e1d587742a2472/1-intro-photo-final.jpg?w=1200&h=992&fl=progressive&q=70&fm=jpg" },
-  { id: "4", email: "email04.gmail.com", image: "https://t4.ftcdn.net/jpg/03/64/21/11/360_F_364211147_1qgLVxv1Tcq0Ohz3FawUfrtONzz8nq3e.jpg" },
-  { id: "5", email: "email05.gmail.com", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuNhTZJTtkR6b-ADMhmzPvVwaLuLdz273wvQ&s" },
-  { id: "6", email: "email06.gmail.com", image: "https://newprofilepic.photo-cdn.net//assets/images/article/profile.jpg?90af0c8" },
-  { id: "7", email: "email07.gmail.com", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvJaoIeJQU_V9rL_ZII61whWyqSFbmMgTgwQ&s" },
-  { id: "8", email: "email08.gmail.com", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRC8kiSH5ZSAcVoj3tAQQDoP_ux0sSricMyUg&s" },
-  { id: "9", email: "email09.gmail.com", image: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dXNlciUyMHByb2ZpbGV8ZW58MHx8MHx8fDA%3D" },
-  { id: "10", email: "email10.gmail.com", image: "https://media.istockphoto.com/id/1497142422/photo/close-up-photo-portrait-of-young-successful-entrepreneur-businessman-investor-wearing-glasses.jpg?s=612x612&w=0&k=20&c=chnP70yMIsbzuyz1uVWn6mQ5GhZYH9_OL26TpgQAxyE=" },
-];
+import { RootStackParamList } from "../Common/StackNavigator";
+import { createGroupChat, joinGroupChat } from "../../../utils/groupChatApi";
+
+type CollaborationHubNavigationProp = StackNavigationProp<RootStackParamList, "CollaborationHub">;
+type GroupChatScreenNavigationProp = StackNavigationProp<RootStackParamList, "GroupChatScreen">;
 
 export default function CollaborationHub() {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedMembers, setSelectedMembers] = useState<{ id: string; email: string; image: string }[]>([]);
+  const navigation = useNavigation<CollaborationHubNavigationProp & GroupChatScreenNavigationProp>();
+  const [groupChats, setGroupChats] = useState([]); // Mocked for now
+  const [groupName, setGroupName] = useState("");
+  const [assignmentId, setAssignmentId] = useState("67f02df8020c2886cd44c047"); // Hardcoded for demo
 
-  // Add Member Function
-  const handleAddMember = (member: { id: string; email: string; image: string }) => {
-    if (!selectedMembers.find((m) => m.id === member.id)) {
-      setSelectedMembers([...selectedMembers, member]);
+  useEffect(() => {
+    // Fetch group chats for assignment (you might need a GET /api/group-chats endpoint)
+    setGroupChats([
+      { _id: "67f02fa4d9ccbcd395e73ef6", name: "HDSE Group", members: ["user1"] },
+    ]); // Mock data
+  }, []);
+
+  const handleCreateGroup = async () => {
+    if (!groupName.trim()) {
+      Alert.alert("Error", "Please enter a group name");
+      return;
+    }
+    try {
+      const newGroup = await createGroupChat(assignmentId, groupName);
+      setGroupChats((prev) => [...prev, newGroup]);
+      setGroupName("");
+      Alert.alert("Success", "Group chat created!");
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    }
+  };
+
+  const handleJoinGroup = async (groupChatId) => {
+    try {
+      const updatedGroup = await joinGroupChat(groupChatId);
+      setGroupChats((prev) =>
+        prev.map((g) => (g._id === groupChatId ? updatedGroup : g))
+      );
+      Alert.alert("Success", "Joined group chat!");
+    } catch (error) {
+      Alert.alert("Error", error.message);
     }
   };
 
@@ -39,166 +62,118 @@ export default function CollaborationHub() {
     <View style={styles.container}>
       <Text style={styles.title}>Collaboration Hub</Text>
 
-      <View style={styles.teamRow}>
-        <Text style={styles.teamText}>Team Members</Text>
-        <TouchableOpacity
-          style={styles.pulseButton}
-          onPress={() => setModalVisible(true)}
-        >
-          <FontAwesome name="plus" size={16} color="black" />
+      <View style={styles.createContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Group Name (e.g., HDSE Group)"
+          value={groupName}
+          onChangeText={setGroupName}
+        />
+        <TouchableOpacity style={styles.createButton} onPress={handleCreateGroup}>
+          <Text style={styles.createButtonText}>Create Group</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Selected Members Grid */}
-      <View style={styles.membersContainer}>
-        {selectedMembers.map((member) => (
-          <Image key={member.id} source={{ uri: member.image }} style={styles.memberAvatar} />
-        ))}
-      </View>
-
-      {/* Modal for Adding Members */}
-      <Modal visible={modalVisible} transparent animationType="slide">
-        <View style={styles.modalContainer}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Members</Text>
-
-            {/* Scrollable area */}
-            <View style={styles.scrollArea}>
-              <FlatList
-                data={membersData}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <View style={styles.memberRow}>
-                    <Image source={{ uri: item.image }} style={styles.avatar} />
-                    <Text style={styles.emailText}>{item.email}</Text>
-                    <TouchableOpacity style={styles.addButton}>
-                      <Text style={styles.addButtonText}  onPress={() => handleAddMember(item)}>Add</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-                showsVerticalScrollIndicator={true}
-              />
+      <FlatList
+        data={groupChats}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item }) => (
+          <View style={styles.groupItem}>
+            <Text style={styles.groupName}>{item.name}</Text>
+            <Text style={styles.groupMembers}>{item.members.length} Members</Text>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.joinButton}
+                onPress={() => handleJoinGroup(item._id)}
+              >
+                <Text style={styles.buttonText}>Join</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.chatButton}
+                onPress={() => navigation.navigate("GroupChatScreen", { groupChatId: item._id })}
+              >
+                <Text style={styles.buttonText}>Chat</Text>
+              </TouchableOpacity>
             </View>
-
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
+        )}
+      />
     </View>
   );
 }
 
-const { height, width } = Dimensions.get("window");
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
     padding: 20,
+    backgroundColor: "#f5f5f5",
   },
   title: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
-    marginTop: 20,
-    marginBottom: 30,
+    marginBottom: 20,
   },
-  teamRow: {
+  createContainer: {
     flexDirection: "row",
-    alignItems: "center",
+    marginBottom: 20,
   },
-  teamText: {
-    fontSize: 16,
+  input: {
     flex: 1,
-  },
-  pulseButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "#e0e0e0",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  membersContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginTop: 20,
+    backgroundColor: "#fff",
     padding: 10,
-    backgroundColor: "#e0e0e0",
-    borderRadius: 10,
-    minHeight: 80,
-    justifyContent: "flex-start",
-  },
-  memberAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    margin: 5,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    backgroundColor: "white",
-    width: "85%",
-    maxHeight: height * 0.8,
-    padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  scrollArea: {
-    width: "100%",
-    flexGrow: 1,
-    height: height * 0.5,
-  },
-  memberRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    width: "100%",
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#ccc",
     marginRight: 10,
   },
-  emailText: {
-    flex: 1,
-    fontSize: 16,
-  },
-  addButton: {
-    backgroundColor: "#77c7c7",
-    paddingVertical: 5,
-    paddingHorizontal: 15,
+  createButton: {
+    backgroundColor: "#34a0a4",
+    padding: 10,
     borderRadius: 5,
+    justifyContent: "center",
   },
-  addButtonText: {
-    color: "white",
+  createButtonText: {
+    color: "#fff",
     fontWeight: "bold",
   },
-  closeButton: {
-    marginTop: 15,
-    backgroundColor: "#ff5757",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
+  groupItem: {
+    backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#34a0a4",
   },
-  closeButtonText: {
-    color: "white",
+  groupName: {
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  groupMembers: {
+    fontSize: 14,
+    color: "#555",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  joinButton: {
+    backgroundColor: "#34a0a4",
+    padding: 8,
+    borderRadius: 5,
+    width: "45%",
+    alignItems: "center",
+  },
+  chatButton: {
+    backgroundColor: "#7FCAC3",
+    padding: 8,
+    borderRadius: 5,
+    width: "45%",
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
     fontWeight: "bold",
   },
 });
