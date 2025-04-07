@@ -10,6 +10,7 @@ import {
 } from "react-native";
 //@ts-ignore
 import { RootStackParamList } from "../Common/StackNavigator";
+import { Dropdown } from "react-native-element-dropdown";
 
 type LoginScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -21,11 +22,27 @@ export default function Registration() {
 
   const [form, setForm] = useState({
     name: "",
+    email: "",
     registrationNumber: "",
-    batch: "",
+    course: null,
+    batch: null,
     password: "",
     confirmPassword: "",
   });
+
+  const courseOptions = [
+    { label: "Computer Science", value: "cs" },
+    { label: "Electrical Engineering", value: "ee" },
+    { label: "Mechanical Engineering", value: "me" },
+    { label: "Civil Engineering", value: "ce" },
+  ];
+
+  const batchOptions = [
+    { label: "2023", value: "2023" },
+    { label: "2024", value: "2024" },
+    { label: "2025", value: "2025" },
+    { label: "2026", value: "2026" },
+  ];
 
   return (
     <View style={styles.container}>
@@ -46,16 +63,49 @@ export default function Registration() {
       />
       <TextInput
         style={styles.input}
-        placeholder="Registration Number"
-        value={form.registrationNumber}
-        onChangeText={(text) => setForm({ ...form, registrationNumber: text })}
+        placeholder="Email"
+        value={form.email}
+        onChangeText={(text) => setForm({ ...form, email: text })}
       />
       <TextInput
         style={styles.input}
-        placeholder="Enter Batch"
-        value={form.batch}
-        onChangeText={(text) => setForm({ ...form, batch: text })}
+        placeholder="Registration Number"
+        value={form.registrationNumber}
+        onChangeText={(text) =>
+          setForm({ ...form, registrationNumber: text })
+        }
       />
+
+      {/* Searchable Course Dropdown */}
+      <Dropdown
+        style={styles.dropdown}
+        placeholderStyle={styles.placeholderStyle}
+        selectedTextStyle={styles.selectedTextStyle}
+        data={courseOptions}
+        labelField="label"
+        valueField="value"
+        placeholder="Select Course"
+        search
+        searchPlaceholder="Search..."
+        value={form.course}
+        onChange={(item) => setForm({ ...form, course: item.value })}
+      />
+
+      {/* Searchable Batch Dropdown */}
+      <Dropdown
+        style={styles.dropdown}
+        placeholderStyle={styles.placeholderStyle}
+        selectedTextStyle={styles.selectedTextStyle}
+        data={batchOptions}
+        labelField="label"
+        valueField="value"
+        placeholder="Select Batch"
+        search
+        searchPlaceholder="Search..."
+        value={form.batch}
+        onChange={(item) => setForm({ ...form, batch: item.value })}
+      />
+
       <TextInput
         style={styles.input}
         placeholder="Enter Password"
@@ -113,8 +163,26 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     borderRadius: 20,
     paddingHorizontal: 15,
+    paddingLeft: 18,
     marginBottom: 10,
-    elevation: 2, // Adds shadow
+    elevation: 2,
+  },
+  dropdown: {
+    width: "90%",
+    height: 45,
+    backgroundColor: "#FFF",
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    marginBottom: 10,
+    // elevation: 2,
+  },
+  placeholderStyle: {
+    color: "#999",
+    fontSize: 14,
+  },
+  selectedTextStyle: {
+    fontSize: 14,
+    color: "#333",
   },
   button: {
     backgroundColor: "#6FC3B2",
@@ -138,3 +206,4 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
+

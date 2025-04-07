@@ -15,9 +15,15 @@ type UserDashboardScreenNavigationProp = StackNavigationProp<
   "UserDashboard"
 >;
 
+type AdminDashboardScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "AdminDashboard"
+>;
+
 export default function Login() {
     const navigation = useNavigation<RegistrationScreenNavigationProp>();
     const navigationUser = useNavigation<UserDashboardScreenNavigationProp>();
+    const navigationAdmin = useNavigation<AdminDashboardScreenNavigationProp>();
   const [form, setForm] = useState({ name: "", password: "" });
 
   return (
@@ -41,7 +47,7 @@ export default function Login() {
       />
 
       {/* Login Button */}
-      <TouchableOpacity style={styles.button} onPress={() => navigationUser.navigate("UserDashboard")}>
+      <TouchableOpacity style={styles.button} onPress={() => navigationAdmin.navigate("UserDashboard")}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
