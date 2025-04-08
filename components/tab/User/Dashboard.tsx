@@ -16,6 +16,7 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import io from "socket.io-client";
+import * as DocumentPicker from "expo-document-picker";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -58,6 +59,10 @@ const Dashboard: React.FC = () => {
   const [editCourse, setEditCourse] = useState("");
   const [editBatch, setEditBatch] = useState("");
   const [editRegNo, setEditRegNo] = useState("");
+  const [assignmentModal, setAssignmentModal] = useState(false);
+  const [assignmentTitle, setAssignmentTitle] = useState("");
+  const [submissionLink, setSubmissionLink] = useState("");
+  const [submissionFile, setSubmissionFile] = useState<any>(null);
   const socket = io("http://localhost:5001");
 
   useEffect(() => {
@@ -255,6 +260,79 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const pickSubmissionFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/pdf",
+      });
+      if (result.type === "success") {
+        setSubmissionFile(result);
+        setSubmissionLink(""); // Clear link if file is selected
+      }
+    } catch (error) {
+      console.error("File pick error:", error);
+      Alert.alert("Error", "Failed to pick file");
+    }
+  };
+
+  const handleSubmitAssignment = async () => {
+    if (!assignmentTitle) {
+      Alert.alert("Error", "Please enter an assignment title");
+      return;
+    }
+    if (!submissionFile && !submissionLink) {
+      Alert.alert("Error", "Please provide a file or a link");
+      return;
+    }
+
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      // Fetch assignment by title
+      const assignmentsResponse = await axios.get("http://localhost:5001/api/assignments", {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { title: assignmentTitle },
+      });
+      const assignments = assignmentsResponse.data;
+      if (!assignments || assignments.length === 0) {
+        Alert.alert("Error", "Assignment not found");
+        return;
+      }
+      const assignment = assignments[0]; // Assume first match; adjust if titles aren't unique
+
+      const formData = new FormData();
+      if (submissionFile) {
+        formData.append("submission", {
+          uri: submissionFile.uri,
+          name: submissionFile.name,
+          type: "application/pdf",
+        } as any);
+      } else if (submissionLink) {
+        formData.append("link", submissionLink);
+      }
+
+      const response = await axios.post(
+        `http://localhost:5001/api/assignments/${assignment._id}/submit`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log("Submission response:", response.data);
+      Alert.alert("Success", "Assignment submitted!");
+      setAssignmentModal(false);
+      setAssignmentTitle("");
+      setSubmissionLink("");
+      setSubmissionFile(null);
+    } catch (error) {
+      console.error("Submit assignment error:", error.response?.data || error);
+      Alert.alert("Error", error.response?.data?.message || "Failed to submit assignment");
+    }
+  };
+
   const filteredGroupChats = allGroupChats.filter((chat) =>
     chat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -268,7 +346,9 @@ const Dashboard: React.FC = () => {
           </TouchableOpacity>
           <Text style={styles.sidebarTitle}>Menu</Text>
           <TouchableOpacity style={styles.menuButton}>
-            <Text style={styles.menuText} onPress={() => setMenuOpen(false)}>Assignments</Text>
+            <Text style={styles.menuText} onPress={() => { setMenuOpen(false); setAssignmentModal(true); }}>
+              Assignments
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuButton}>
             <Text style={styles.menuText} onPress={() => { setMenuOpen(false); setEditProfileModal(true); }}>
@@ -489,6 +569,42 @@ const Dashboard: React.FC = () => {
         </View>
       </Modal>
 
+      <Modal visible={assignmentModal} animationType="slide" transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.chatContainer}>
+            <View style={styles.chatHeader}>
+              <Text style={styles.chatTitle}>Submit Assignment</Text>
+              <TouchableOpacity onPress={() => setAssignmentModal(false)}>
+                <FontAwesome5 name="times" size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Assignment Title (e.g., Assignment 1)"
+              value={assignmentTitle}
+              onChangeText={setAssignmentTitle}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Submission Link (e.g., https://drive.google.com/...)"
+              value={submissionLink}
+              onChangeText={(text) => {
+                setSubmissionLink(text);
+                if (text) setSubmissionFile(null); // Clear file if link is entered
+              }}
+            />
+            <TouchableOpacity style={styles.uploadButton} onPress={pickSubmissionFile}>
+              <Text style={styles.buttonText}>
+                {submissionFile ? submissionFile.name : "Upload PDF File"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.createButton} onPress={handleSubmitAssignment}>
+              <Text style={styles.buttonText}>Submit Assignment</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.profileContainer}>
           <Text style={styles.greeting}>Hello, {profile?.name || "User"}</Text>
@@ -505,8 +621,8 @@ const Dashboard: React.FC = () => {
             <Text style={styles.statTitle}>Complete Assignments</Text>
             <Text style={styles.statValue}>1h 20m</Text>
           </View>
-          <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Recent assignments</Text>
+          <TouchableOpacity style={styles.button} onPress={() => setAssignmentModal(true)}>
+            <Text style={styles.buttonTextBlack}>Submit Assignment</Text>
           </TouchableOpacity>
         </View>
 
@@ -736,12 +852,24 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
   },
+  buttonTextBlack: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#000",
+  },
   createButton: {
     backgroundColor: "#34a0a4",
     padding: 10,
     borderRadius: 10,
     alignItems: "center",
     marginVertical: 10,
+  },
+  uploadButton: {
+    backgroundColor: "#34a0a4",
+    padding: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    marginVertical: 5,
   },
   joinButton: {
     backgroundColor: "#34a0a4",
