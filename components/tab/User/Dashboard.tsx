@@ -63,6 +63,14 @@ const Dashboard: React.FC = () => {
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [submissionLink, setSubmissionLink] = useState("");
   const [submissionFile, setSubmissionFile] = useState<any>(null);
+  const [notesModal, setNotesModal] = useState(false);
+  const [notes, setNotes] = useState<any[]>([]);
+  const [newNoteContent, setNewNoteContent] = useState("");
+  const [newNoteType, setNewNoteType] = useState<"note" | "todo">("note");
+  const [editNoteId, setEditNoteId] = useState<string | null>(null);
+  const [editNoteContent, setEditNoteContent] = useState("");
+  const [editNoteType, setEditNoteType] = useState<"note" | "todo">("note");
+  const [editNoteCompleted, setEditNoteCompleted] = useState(false);
   const socket = io("http://localhost:5001");
 
   useEffect(() => {
@@ -74,7 +82,6 @@ const Dashboard: React.FC = () => {
           console.log("Decoded token:", decoded);
           setUserId(decoded.id);
 
-          // Fetch profile
           const profileResponse = await axios.get("http://localhost:5001/api/auth/profile", {
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -86,7 +93,6 @@ const Dashboard: React.FC = () => {
           setEditBatch(profileResponse.data.batch || "");
           setEditRegNo(profileResponse.data.regNo || "");
 
-          // Fetch group chats
           const userChatsResponse = await axios.get("http://localhost:5001/api/group-chats", {
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -96,6 +102,11 @@ const Dashboard: React.FC = () => {
             headers: { Authorization: `Bearer ${token}` },
           });
           setAllGroupChats(allChatsResponse.data);
+
+          const notesResponse = await axios.get("http://localhost:5001/api/notes", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setNotes(notesResponse.data);
         }
       } catch (error) {
         console.error("Init error:", error);
@@ -287,8 +298,6 @@ const Dashboard: React.FC = () => {
 
     try {
       const token = await AsyncStorage.getItem("token");
-
-      // Fetch assignment by title
       const assignmentsResponse = await axios.get("http://localhost:5001/api/assignments", {
         headers: { Authorization: `Bearer ${token}` },
         params: { title: assignmentTitle },
@@ -298,7 +307,7 @@ const Dashboard: React.FC = () => {
         Alert.alert("Error", "Assignment not found");
         return;
       }
-      const assignment = assignments[0]; // Assume first match; adjust if titles aren't unique
+      const assignment = assignments[0];
 
       const formData = new FormData();
       if (submissionFile) {
@@ -333,6 +342,100 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleCreateNote = async () => {
+    if (!assignmentTitle || !newNoteContent) {
+      Alert.alert("Error", "Please enter an assignment title and note content");
+      return;
+    }
+
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const trimmedTitle = assignmentTitle.trim();
+      console.log("Checking assignment with title:", trimmedTitle);
+
+      const assignmentsResponse = await axios.get("http://localhost:5001/api/assignments", {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { title: trimmedTitle },
+      });
+      const assignments = assignmentsResponse.data;
+      console.log("Assignments found:", assignments);
+      if (!assignments || assignments.length === 0) {
+        Alert.alert("Error", "Assignment not found");
+        return;
+      }
+      const assignment = assignments[0];
+      console.log("Selected assignment:", assignment);
+
+      const response = await axios.post(
+        "http://localhost:5001/api/notes",
+        {
+          assignmentTitle: trimmedTitle, // Fixed: Send assignmentTitle, not assignment
+          content: newNoteContent,
+          type: newNoteType,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log("Note created:", response.data);
+
+      setNotes((prev) => [{ ...response.data, assignment: { title: assignment.title, _id: assignment._id } }, ...prev]);
+      setNewNoteContent("");
+      setNewNoteType("note");
+      setAssignmentTitle("");
+      Alert.alert("Success", "Note created!");
+    } catch (error) {
+      console.error("Create note error:", error.response?.data || error);
+      Alert.alert("Error", error.response?.data?.message || "Failed to create note");
+    }
+  };
+
+  const handleUpdateNote = async () => {
+    if (!editNoteId || !editNoteContent) {
+      Alert.alert("Error", "Please provide note content");
+      return;
+    }
+
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const response = await axios.put(
+        `http://localhost:5001/api/notes/${editNoteId}`,
+        {
+          content: editNoteContent,
+          type: editNoteType,
+          completed: editNoteCompleted,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log("Note updated:", response.data);
+      setNotes((prev) =>
+        prev.map((note) =>
+          note._id === editNoteId ? { ...response.data, assignment: note.assignment } : note
+        )
+      );
+      setEditNoteId(null);
+      setEditNoteContent("");
+      setEditNoteType("note");
+      setEditNoteCompleted(false);
+      Alert.alert("Success", "Note updated!");
+    } catch (error) {
+      console.error("Update note error:", error.response?.data || error);
+      Alert.alert("Error", error.response?.data?.message || "Failed to update note");
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      await axios.delete(`http://localhost:5001/api/notes/${noteId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotes((prev) => prev.filter((note) => note._id !== noteId));
+      Alert.alert("Success", "Note deleted!");
+    } catch (error) {
+      console.error("Delete note error:", error.response?.data || error);
+      Alert.alert("Error", error.response?.data?.message || "Failed to delete note");
+    }
+  };
+
   const filteredGroupChats = allGroupChats.filter((chat) =>
     chat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -361,6 +464,11 @@ const Dashboard: React.FC = () => {
           <TouchableOpacity style={styles.menuButton}>
             <Text style={styles.menuText} onPress={() => { setMenuOpen(false); setGroupChatModal(true); }}>
               Collaboration Hub
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuButton}>
+            <Text style={styles.menuText} onPress={() => { setMenuOpen(false); setNotesModal(true); }}>
+              Notes
             </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuButton}>
@@ -590,7 +698,7 @@ const Dashboard: React.FC = () => {
               value={submissionLink}
               onChangeText={(text) => {
                 setSubmissionLink(text);
-                if (text) setSubmissionFile(null); // Clear file if link is entered
+                if (text) setSubmissionFile(null);
               }}
             />
             <TouchableOpacity style={styles.uploadButton} onPress={pickSubmissionFile}>
@@ -601,6 +709,121 @@ const Dashboard: React.FC = () => {
             <TouchableOpacity style={styles.createButton} onPress={handleSubmitAssignment}>
               <Text style={styles.buttonText}>Submit Assignment</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={notesModal} animationType="slide" transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.chatContainer}>
+            <View style={styles.chatHeader}>
+              <Text style={styles.chatTitle}>Assignment Notes</Text>
+              <TouchableOpacity onPress={() => setNotesModal(false)}>
+                <FontAwesome5 name="times" size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Assignment Title (e.g., Assignment 1)"
+              value={assignmentTitle}
+              onChangeText={setAssignmentTitle}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Note Content"
+              value={newNoteContent}
+              onChangeText={setNewNoteContent}
+            />
+            <View style={styles.typeContainer}>
+              <TouchableOpacity
+                style={[styles.typeButton, newNoteType === "note" && styles.typeButtonSelected]}
+                onPress={() => setNewNoteType("note")}
+              >
+                <Text style={styles.buttonText}>Note</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.typeButton, newNoteType === "todo" && styles.typeButtonSelected]}
+                onPress={() => setNewNoteType("todo")}
+              >
+                <Text style={styles.buttonText}>To-Do</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.createButton} onPress={handleCreateNote}>
+              <Text style={styles.buttonText}>Add Note</Text>
+            </TouchableOpacity>
+            <FlatList
+              data={notes}
+              keyExtractor={(item) => item._id}
+              renderItem={({ item }) => (
+                <View style={styles.noteItem}>
+                  <Text style={styles.noteText}>
+                    {item.assignment?.title || "Assignment Not Found"}: {item.content}
+                  </Text>
+                  <Text style={styles.noteType}>
+                    {item.type === "todo" ? (item.completed ? "✔ Done" : "⬜ To-Do") : "Note"}
+                  </Text>
+                  <View style={styles.noteActions}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setEditNoteId(item._id);
+                        setEditNoteContent(item.content);
+                        setEditNoteType(item.type);
+                        setEditNoteCompleted(item.completed || false);
+                      }}
+                    >
+                      <FontAwesome5 name="edit" size={20} color="#34a0a4" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleDeleteNote(item._id)}>
+                      <FontAwesome5 name="trash" size={20} color="#ff4444" />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+              style={styles.notesList}
+            />
+            {editNoteId && (
+              <View style={styles.editNoteContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={editNoteContent}
+                  onChangeText={setEditNoteContent}
+                  placeholder="Edit Note Content"
+                />
+                <View style={styles.typeContainer}>
+                  <TouchableOpacity
+                    style={[styles.typeButton, editNoteType === "note" && styles.typeButtonSelected]}
+                    onPress={() => setEditNoteType("note")}
+                  >
+                    <Text style={styles.buttonText}>Note</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.typeButton, editNoteType === "todo" && styles.typeButtonSelected]}
+                    onPress={() => setEditNoteType("todo")}
+                  >
+                    <Text style={styles.buttonText}>To-Do</Text>
+                  </TouchableOpacity>
+                </View>
+                {editNoteType === "todo" && (
+                  <TouchableOpacity
+                    style={styles.completedButton}
+                    onPress={() => setEditNoteCompleted(!editNoteCompleted)}
+                  >
+                    <Text style={styles.buttonText}>
+                      {editNoteCompleted ? "Mark Incomplete" : "Mark Complete"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity style={styles.createButton} onPress={handleUpdateNote}>
+                  <Text style={styles.buttonText}>Save Changes</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.cancelButton}
+                  onPress={() => setEditNoteId(null)}
+                >
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </View>
       </Modal>
@@ -623,6 +846,9 @@ const Dashboard: React.FC = () => {
           </View>
           <TouchableOpacity style={styles.button} onPress={() => setAssignmentModal(true)}>
             <Text style={styles.buttonTextBlack}>Submit Assignment</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={() => setNotesModal(true)}>
+            <Text style={styles.buttonTextBlack}>View Notes</Text>
           </TouchableOpacity>
         </View>
 
@@ -910,6 +1136,70 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginVertical: 10,
     fontSize: 16,
+  },
+  notesList: {
+    flex: 1,
+  },
+  noteItem: {
+    padding: 10,
+    backgroundColor: "#fff",
+    borderRadius: 5,
+    marginVertical: 5,
+    borderWidth: 1,
+    borderColor: "#34a0a4",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  noteText: {
+    fontSize: 16,
+    flex: 1,
+  },
+  noteType: {
+    fontSize: 14,
+    color: "#555",
+    marginLeft: 10,
+  },
+  noteActions: {
+    flexDirection: "row",
+    width: 60,
+    justifyContent: "space-between",
+  },
+  typeContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 5,
+  },
+  typeButton: {
+    backgroundColor: "#ccc",
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  typeButtonSelected: {
+    backgroundColor: "#34a0a4",
+  },
+  editNoteContainer: {
+    padding: 10,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  completedButton: {
+    backgroundColor: "#34a0a4",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    marginVertical: 5,
+  },
+  cancelButton: {
+    backgroundColor: "#ff4444",
+    padding: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    marginVertical: 5,
   },
 });
 
