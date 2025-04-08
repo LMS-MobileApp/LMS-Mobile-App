@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -49,9 +48,16 @@ const Dashboard: React.FC = () => {
   const [selectedGroupChat, setSelectedGroupChat] = useState<any>(null);
   const [groupMessages, setGroupMessages] = useState<any[]>([]);
   const [groupMessageInput, setGroupMessageInput] = useState("");
-  const [newGroupName, setNewGroupName] = useState(""); // New state for group name
-  const [newGroupAssignmentId, setNewGroupAssignmentId] = useState(""); // New state for assignment ID
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupAssignmentId, setNewGroupAssignmentId] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [editProfileModal, setEditProfileModal] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editCourse, setEditCourse] = useState("");
+  const [editBatch, setEditBatch] = useState("");
+  const [editRegNo, setEditRegNo] = useState("");
   const socket = io("http://localhost:5001");
 
   useEffect(() => {
@@ -62,20 +68,33 @@ const Dashboard: React.FC = () => {
           const decoded = decodeJWT(token);
           console.log("Decoded token:", decoded);
           setUserId(decoded.id);
+
+          // Fetch profile
+          const profileResponse = await axios.get("http://localhost:5001/api/auth/profile", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          console.log("Profile fetched:", profileResponse.data);
+          setProfile(profileResponse.data);
+          setEditName(profileResponse.data.name);
+          setEditEmail(profileResponse.data.email);
+          setEditCourse(profileResponse.data.course || "");
+          setEditBatch(profileResponse.data.batch || "");
+          setEditRegNo(profileResponse.data.regNo || "");
+
+          // Fetch group chats
+          const userChatsResponse = await axios.get("http://localhost:5001/api/group-chats", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setGroupChats(userChatsResponse.data);
+
+          const allChatsResponse = await axios.get("http://localhost:5001/api/group-chats/all", {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setAllGroupChats(allChatsResponse.data);
         }
-
-        const tokenForApi = await AsyncStorage.getItem("token");
-        const userChatsResponse = await axios.get("http://localhost:5001/api/group-chats", {
-          headers: { Authorization: `Bearer ${tokenForApi}` },
-        });
-        setGroupChats(userChatsResponse.data);
-
-        const allChatsResponse = await axios.get("http://localhost:5001/api/group-chats/all", {
-          headers: { Authorization: `Bearer ${tokenForApi}` },
-        });
-        setAllGroupChats(allChatsResponse.data);
       } catch (error) {
         console.error("Init error:", error);
+        Alert.alert("Error", "Failed to initialize dashboard. Check server connection.");
       }
     };
     initialize();
@@ -211,6 +230,31 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleUpdateProfile = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const updatedProfile = {
+        name: editName,
+        email: editEmail,
+        course: editCourse,
+        batch: editBatch,
+        regNo: editRegNo,
+      };
+      const response = await axios.put(
+        "http://localhost:5001/api/auth/profile",
+        updatedProfile,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      console.log("Profile updated:", response.data);
+      setProfile(response.data);
+      setEditProfileModal(false);
+      Alert.alert("Success", "Profile updated!");
+    } catch (error) {
+      console.error("Update profile error:", error.response?.data || error);
+      Alert.alert("Error", error.response?.data?.message || "Failed to update profile");
+    }
+  };
+
   const filteredGroupChats = allGroupChats.filter((chat) =>
     chat.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -227,7 +271,9 @@ const Dashboard: React.FC = () => {
             <Text style={styles.menuText} onPress={() => setMenuOpen(false)}>Assignments</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuButton}>
-            <Text style={styles.menuText} onPress={() => setMenuOpen(false)}>Profile</Text>
+            <Text style={styles.menuText} onPress={() => { setMenuOpen(false); setEditProfileModal(true); }}>
+              Profile
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuButton}>
             <Text style={styles.menuText} onPress={() => setMenuOpen(false)}>Calendar</Text>
@@ -355,7 +401,6 @@ const Dashboard: React.FC = () => {
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                 />
-                {/* New inputs for creating group */}
                 <TextInput
                   style={styles.input}
                   placeholder="Group Name (e.g., HDSE Group)"
@@ -398,15 +443,57 @@ const Dashboard: React.FC = () => {
         </View>
       </Modal>
 
+      <Modal visible={editProfileModal} animationType="slide" transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.chatContainer}>
+            <View style={styles.chatHeader}>
+              <Text style={styles.chatTitle}>Edit Profile</Text>
+              <TouchableOpacity onPress={() => setEditProfileModal(false)}>
+                <FontAwesome5 name="times" size={24} color="#fff" />
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Name"
+              value={editName}
+              onChangeText={setEditName}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              value={editEmail}
+              onChangeText={setEditEmail}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Course"
+              value={editCourse}
+              onChangeText={setEditCourse}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Batch"
+              value={editBatch}
+              onChangeText={setEditBatch}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Registration Number"
+              value={editRegNo}
+              onChangeText={setEditRegNo}
+            />
+            <TouchableOpacity style={styles.createButton} onPress={handleUpdateProfile}>
+              <Text style={styles.buttonText}>Save Changes</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.profileContainer}>
-          <Image
-            source={{
-              uri: "https://media.istockphoto.com/id/2015429231/vector/vector-flat-illustration-in-black-color-avatar-user-profile-person-icon-profile-picture.jpg?s=612x612&w=0&k=20&c=Wu70OARg2npxWy5E22_ZLneabuTafvV_6avgYPhWOoU=",
-            }}
-            style={styles.profileImage}
-          />
-          <Text style={styles.greeting}>Hello, Klera Ogasthine</Text>
+          <Text style={styles.greeting}>Hello, {profile?.name || "User"}</Text>
+          <Text style={styles.subText}>Reg No: {profile?.regNo || "N/A"}</Text>
+          <Text style={styles.subText}>Course: {profile?.course || "N/A"} - Batch: {profile?.batch || "N/A"}</Text>
         </View>
 
         <View style={styles.statsContainer}>
@@ -588,15 +675,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 100,
-  },
   greeting: {
     fontSize: 18,
     fontWeight: "bold",
     marginTop: 8,
+  },
+  subText: {
+    fontSize: 14,
+    color: "#555",
+    marginTop: 4,
   },
   statsContainer: {
     width: "100%",
